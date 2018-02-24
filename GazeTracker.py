@@ -11,7 +11,7 @@ face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 #https://github.com/Itseez/opencv/blob/master/data/haarcascades/haarcascade_eye.xml
 eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
 
-# inicializar os monitores de direcao
+#  initialize the variables for monitoring the directions
 
 delta_X = 0
 delta_Y = 0
@@ -25,27 +25,27 @@ X_position = 50
 Y_position = 500
 select = False
 
-#Captura video da camera0 (Capture video from camera0)
+# Capture video from camera0
 cap = cv2.VideoCapture(0)
 
-# Inicializa a pygame
+# Initialize Pygame 
 pygame.init()
 
-# Seta o status "rodando" como True, pra poder entrar no while infinito
+# Set running as True, to stay in loop
 running = True
 
-# Seta o vetor que define o tamanho da tela
+# Set screen size vector
 size = width, height = 1300,800
 
-# Cria um "objeto" chamado Screen (tela), cujo parametro e o vetor que define o tamanho da tela
+# Create an 'screen' object, which receives the size vector as parameter
 screen = pygame.display.set_mode(size)
 
-# Valores RGB para cores
+# Initializing colors as RGB
 black = (0, 0, 0)
 white = (255,255,255)
 red = (255,0,0)
 
-#carregar os aquivos de som .wav
+# Load .wav sound files for Interface
 
 sound1 = pygame.mixer.Sound('cima.wav')
 sound2 = pygame.mixer.Sound('baixo.wav')
@@ -59,7 +59,7 @@ sound9 = pygame.mixer.Sound('frio.wav')
 sound10 = pygame.mixer.Sound('calor.wav')
 sound11 = pygame.mixer.Sound('sede.wav')
 
-# carregar imagens
+# Load .png images for GUI
 
 frio = pygame.image.load('frio.png')
 fome = pygame.image.load('fome.png')
@@ -68,76 +68,75 @@ calor = pygame.image.load('calor.jpg')
 agua = pygame.image.load('sede.png')
 banheiro = pygame.image.load('banheiro.png')
 
-
+# This Function evaluates a point, returning a value for its probability of being the eye center
 def PossibleCenter(Xcenter, Ycenter, coluna_final,linha_final,Xgradient,Ygradient):
 		
-		# inicializo a funcao objetivo
+		# initialize objective function
 		objFunction = 0
 		#n = 0
 		
-		# inicializo as matrizes x e y
+		# initialize x and y matrices
 		indices = np.indices((linha_final,coluna_final))
 		X = indices[1]
 		Y = indices[0]
-		# defino a matriz dos vetores displacement
+		
+		# define the displacement vector matrices
 		dx = X - Xcenter
 		dy = Y - Ycenter
 				
-		# Normalizo a matriz dos vetores displacement (d)
+		# Normalize the displacement vector matrix
 		magnitude = pow((dx*dx) + (dy*dy),0.5)
 		dx = dx / (magnitude + 0.001)
 		dy = dy / (magnitude + 0.001)
 				
-		#Normalizo o gradiente
+		# Normalize the luminous intensity gradient 
 		gradMagnitude = pow((Xgradient**2) + (Ygradient**2),0.5)
 
 		Xgradient = (Xgradient) / (gradMagnitude + 0.001)
 				
 		Ygradient = (Ygradient) / (gradMagnitude + 0.001)   
 				
-		#calculo o produto escalar
+		# Evaluate dot product between gradient and displacement vectors
 		dotProduct = dx*Xgradient + dy*Ygradient
 		dotProduct = np.maximum(dotProduct,np.zeros((linha_final,coluna_final)))
 		objFunction = np.sum(((255.0 - roi_new)**3)*(dotProduct**2))
-		#n = n + 1
 		
-		# retorno o valor da funcao objetivo normalizado pelo numero de pixels ao quadrado
+		# Return objective function value normalized by the number of pixels squared 
 		objFunction = (objFunction) / ((linha_final*coluna_final)**2)
 		return objFunction
 
 while (running == True):
 
-	for event in pygame.event.get():                # Verifico o clique do mouse no x vermelho para fechar
-		if event.type == pygame.QUIT:               # Se encontrar um evento do tipo "sair":
-			running = False                         # seto status para falso e caio fora do while infinito
+	for event in pygame.event.get():                # verifying the quit event (click on x on page's top corner)
+		if event.type == pygame.QUIT:           
+			running = False                         # set running false and leaves the loop
 
 
-	screen.fill(white)                              # Preencho a tela com a cor branca
+	screen.fill(white)                              # Fill screen with white
 
-	#Captura quadro a quadro (Capture frame-by-frame)
+	# Capture frame-by-frame
 	ret, img = cap.read()
-	# Colher apenas uma amostra da imagem de entrada (Crop Input image)
-	#img = img0[40:520, 380:920]
-	#Faz gaussian blur [borramento] (Apply Gaussian blurring)
+	
+	# Apply Gaussian blurring
 	blur = cv2.GaussianBlur(img,(5,5),0)
-	#Muda o espaco de cor de BGR para escala de Cinza (Change color-space from BGR to Gray)
+	
+	# Change color-space from BGR to GrayScale
 	gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
 	
-	#Aplica o classificador em cascata de olhos (Apply cascade face classifier)
-	
+	# Apply cascade face classifier
 	eyes = eye_cascade.detectMultiScale(gray,1.3,9,
 		0,(60, 60),(90, 90))
 	eye_blink = eye_blink + 1  
 
 	for (ex,ey,ew,eh) in eyes:
-		#ey <  h/2 and ey > h/4
+		
 		if(1==1):
 				
 			roi_new = gray[ey:ey+eh, ex:ex+ew]
-			#roi_color = img[ey:ey+eh, ex:ex+ew]
+			
 			cv2.rectangle(img,(ex,ey),(ex+ew,ey+eh),(0,255,0),1)
 				
-			#Calcula os gradientes
+			# evaluate gradients via Sobel operators
 			Xsobel = cv2.Sobel(roi_new,cv2.CV_64F,1,0,ksize=5)
 			Ysobel = cv2.Sobel(roi_new,cv2.CV_64F,0,1,ksize=5)
 
@@ -248,7 +247,7 @@ while (running == True):
 				down = 0
 				print 'center'
 				
-    # posiciona o retangulo vermelho de selecao
+    # red selection rectangle
    	print "+++++"
    	print eyes
    	
@@ -288,18 +287,16 @@ while (running == True):
 		sound11.play()
 		time.sleep(.600)
 
-	# pisca e mostra as imagens na tela
+	# blit images on screen
 	screen.blit(sono, (290,20))
 	screen.blit(fome, (290,260))
 	screen.blit(calor, (530,20))
 	screen.blit(banheiro, (530,260))
 	screen.blit(frio, (770,20))
 	screen.blit(agua, (770,260))
-    #print "---------------"
     
-   	
-    #print eyes
-	# Nunca esquecer de Atualizar a tela (update), para mostrar as coisas evoluindo no tempo
+ 
+	# Screen update, showing thing changing in time
 	pygame.display.update()
 	
 	cv2.imshow('img',img)
@@ -308,10 +305,11 @@ while (running == True):
 		break
 
 
-# Quando cair fora do while infinito, sair da Pygame e fechar o systema
+# When dropping out the loop, quit pygame and close system
 pygame.quit()  
 sys.exit()
-# Matar as janelas do OpenCV
+
+# Kill OpenCV windows
 cap.release()
 cv2.destroyAllWindows()
 
